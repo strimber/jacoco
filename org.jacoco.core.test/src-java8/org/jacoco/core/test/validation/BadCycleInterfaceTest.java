@@ -11,6 +11,9 @@
  *******************************************************************************/
 package org.jacoco.core.test.validation;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.jacoco.core.analysis.ICounter;
 import org.jacoco.core.test.validation.targets.BadCycleInterface;
 import org.junit.Test;
@@ -26,22 +29,22 @@ public class BadCycleInterfaceTest extends ValidationTestBase {
 
 	@Test
 	public void test() throws Exception {
-		if (System.getProperty("java.version").startsWith("9-ea")) {
-			// JDK-9042842
-			assertLine("baseclinit", ICounter.EMPTY);
-			assertLine("childdefault", ICounter.NOT_COVERED);
-			assertLogEvents("childclinit", "childstaticmethod");
+		// The cycle causes a default method to be called before the static
+		// initializer of an interface:
+		Matcher m = Pattern.compile("^1.8.0_([0-9]++)$")
+				.matcher(System.getProperty("java.version"));
+		if (m.matches() && Integer.parseInt(m.group(1)) < 40) {
+			// JDK-8062114
+			assertLogEvents("baseclinit", "childDefaultMethod", "childclinit",
+					"baseDefaultMethod");
 		} else {
-			assertLine("baseclinit", ICounter.FULLY_COVERED);
-			assertLine("childdefault", ICounter.FULLY_COVERED);
-
-			// The cycle causes a default method to be called before the static
-			// initializer of a interface:
-			assertLogEvents("baseclinit", "childdefaultmethod", "childclinit",
-					"childstaticmethod");
+			assertLogEvents("childclinit", "baseDefaultMethod", "baseclinit",
+					"childDefaultMethod");
 		}
 		assertLine("childclinit", ICounter.FULLY_COVERED);
-		assertLine("childstatic", ICounter.FULLY_COVERED);
-
+		assertLine("basedefault", ICounter.FULLY_COVERED);
+		assertLine("baseclinit", ICounter.FULLY_COVERED);
+		assertLine("childdefault", ICounter.FULLY_COVERED);
 	}
+
 }

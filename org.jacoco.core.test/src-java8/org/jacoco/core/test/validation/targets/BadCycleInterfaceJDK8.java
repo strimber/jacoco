@@ -11,37 +11,38 @@
  *******************************************************************************/
 package org.jacoco.core.test.validation.targets;
 
-public class BadCycleInterface {
+public class BadCycleInterfaceJDK8 {
 
-	interface Base {
+	public interface Base {
 		static final Object BASE_CONST = new Child() {
 			{
 				Stubs.logEvent("baseclinit"); // $line-baseclinit$
 			}
 		}.childDefaultMethod();
 
-		default Object baseDefaultMethod() {
-			Stubs.logEvent("baseDefaultMethod"); // $line-basedefault$
-			return null;
+		default void baseDefaultMethod() {
 		}
 	}
 
-	interface Child extends Base {
-		static final Object CHILD_CONST = new Base() {
+	public interface Child extends Base {
+		static final Object CHILD_CONST = new Object() {
 			{
 				Stubs.logEvent("childclinit"); // $line-childclinit$
 			}
-		}.baseDefaultMethod();
+		};
 
 		default Object childDefaultMethod() {
-			Stubs.logEvent("childDefaultMethod"); // $line-childdefault$
+			Stubs.logEvent("childdefaultmethod"); // $line-childdefault$
 			return null;
+		}
+
+		static void childStaticMethod() {
+			Stubs.logEvent("childstaticmethod"); // $line-childstatic$
 		}
 	}
 
 	public static void main(String[] args) {
-		new Child() {
-		};
+		Child.childStaticMethod();
 	}
 
 }
